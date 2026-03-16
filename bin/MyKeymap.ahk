@@ -126,33 +126,6 @@ InitKeymap()
   km.Map("singlePress", _ => (Send("{blind}{space}")))
   km.Map("*w", _ => ProcessExistSendKeyOrRun("WeChat.exe", "^!w", "shortcuts\微信.lnk"))
 
-  ; J 模式
-  km8 := KeymapManager.NewKeymap("*j", "J 模式", "", "")
-  km := km8
-  km.Map("*i", _ => (Send("{blind}ji")))
-  km.Map("singlePress", _ => (Send("{blind}{j}")))
-  km.RemapKey(",", "delete")
-  km.RemapKey(".", "insert")
-  km.Map("*2", _ => (Send("^+{tab}")))
-  km.Map("*3", _ => (Send("^{tab}")))
-  km.RemapKey("a", "home")
-  km.Map("*b", _ => (Send("^{backspace}")))
-  km.RemapKey("c", "backspace")
-  km.RemapKey("d", "down")
-  km.RemapKey("e", "up")
-  km.RemapKey("f", "right")
-  km.RemapKey("g", "end")
-  km.Map("*k", _ => HoldDownModifierKey("LShift"))
-  km.RemapKey("q", "appskey")
-  km.RemapKey("r", "tab")
-  km.RemapKey("s", "left")
-  km.Map("*t", _ => (Send("{home}+{end}{backspace}")))
-  km.Map("*v", _ => (Send("{blind}^{right}")))
-  km.Map("*w", _ => (Send("{blind}+{tab}")))
-  km.RemapKey("x", "esc")
-  km.Map("*z", _ => (Send("{blind}^{left}")))
-  km.Map("*space", _ => (Send("{blind}{enter}")))
-
   ; 3 模式
   km10 := KeymapManager.NewKeymap("*3", "3 模式", "", "")
   km := km10
