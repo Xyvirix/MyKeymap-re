@@ -41,32 +41,130 @@ const formatSpace = (hotkey: string) => {
 </script>
 
 <template>
-  <div class="d-flex flex-wrap mt-4">
-    <div>
-      <v-card class="mb-4 bg-transparent" width="800">
-        <v-card-text>
-          <v-row justify="start">
-            <v-col v-for="(action, hotkey) in hotkeys" cols="auto" :key="hotkey">
-              <key :hotkey="hotkey as string" :label="formatSpace(hotkey as string)"/>
-            </v-col>
-          </v-row>
+  <div class="abbr-shell">
+    <section class="abbr-primary">
+      <v-card elevation="0" class="workspace-card keycaps-card">
+        <v-card-text class="keycaps-body">
+          <div class="abbr-key-grid">
+            <key
+              v-for="(action, hotkey) in hotkeys"
+              :key="hotkey"
+              :hotkey="hotkey as string"
+              :label="formatSpace(hotkey as string)"
+            />
+          </div>
 
           <v-text-field v-model="cmd" @keydown.enter="runCmd()"
-                        class="ml-1 mt-5" variant="underlined" color="primary"
+                        class="abbr-command-field" variant="underlined" color="primary"
                         :label="translate('label:406')">
           </v-text-field>
         </v-card-text>
       </v-card>
-      <action></action>
-    </div>
-    <action-comment-table class="ml-14 mr-4" style="min-width: 200px; flex: 1">
-      <template #keyText="{hotkey}">
-        {{ formatSpace(hotkey as string) }}
-      </template>
-    </action-comment-table>
+      <action class="abbr-action-panel"></action>
+    </section>
+    <aside class="abbr-secondary">
+      <action-comment-table class="abbr-summary-panel">
+        <template #keyText="{hotkey}">
+          {{ formatSpace(hotkey as string) }}
+        </template>
+      </action-comment-table>
+    </aside>
   </div>
 
 </template>
 
 <style scoped>
+.abbr-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.9fr);
+  gap: 14px;
+  align-items: start;
+  min-width: 0;
+}
+
+.abbr-primary,
+.abbr-secondary {
+  min-width: 0;
+}
+
+.abbr-secondary {
+  position: sticky;
+  top: 0;
+}
+
+.workspace-card {
+  border: 1px solid rgba(127, 146, 184, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 26px rgba(39, 68, 120, 0.06);
+}
+
+.keycaps-card {
+  margin-bottom: 12px;
+}
+
+.keycaps-body {
+  padding: 16px 16px 12px;
+}
+
+.abbr-key-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.abbr-command-field {
+  margin-top: 16px;
+}
+
+.abbr-action-panel {
+  min-width: 0;
+}
+
+.abbr-summary-panel {
+  min-width: 0;
+}
+
+.abbr-summary-panel :deep(.comment-card) {
+  padding: 5px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 26px rgba(39, 68, 120, 0.04);
+}
+
+.abbr-summary-panel :deep(.Table) {
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.abbr-summary-panel :deep(th) {
+  height: 2.85rem;
+  font-size: 0.95rem;
+}
+
+.abbr-summary-panel :deep(td) {
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 1600px) {
+  .abbr-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .abbr-secondary {
+    position: static;
+  }
+}
+
+@media (max-width: 960px) {
+  .keycaps-body {
+    padding: 12px 12px 10px;
+  }
+
+  .abbr-key-grid {
+    gap: 8px 10px;
+  }
+}
 </style>

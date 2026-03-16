@@ -2,10 +2,11 @@ import { defineStore } from "pinia"
 import { computed, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import { Action, Config, Keymap } from "@/types/config";
-import { useMyFetch } from "./server";
+import { desktopApi } from "./server";
 import trimStart from "lodash-es/trimStart";
 import { languageMap } from "./language-map";
 import { useThrottleFn } from "@vueuse/core";
+import { useAppStore } from "./app";
 
 
 const defaultKeyboardLayout = "1 2 3 4 5 6 7 8 9 0\nq w e r t y u i o p\na s d f g h j k l ;\nz x c v b n m , . /\nspace enter backspace - [ ' singlePress"
@@ -15,14 +16,31 @@ const mouseButtons = "LButton RButton MButton XButton1 XButton2 WheelUp WheelDow
 
 export const useConfigStore = defineStore('config', () => {
   // 根据 url 返回对应的 keymap
+  const appStore = useAppStore()
   const config = fetchConfig()
+  const initialized = ref(false)
+
+  watch(config, (newValue) => {
+    if (!newValue) {
+      return
+    }
+
+    const serialized = serializeConfigForPersist(newValue)
+    if (!initialized.value) {
+      appStore.setBaseline(serialized)
+      initialized.value = true
+      return
+    }
+    appStore.updateDirty(serialized)
+  }, { deep: true })
+
   const route = useRoute()
   const keymap = ref<Keymap>()
   watch(
     () => config.value?.keymaps.find(x => x.id + '' === route.params.id),
     (newValue) => {
       keymap.value = newValue
-      hotkey.value = "" // 防止串键, 会导致当前选择的键带到缩写模式中
+      hotkey.value = pickInitialHotkey(newValue, config.value?.options.keyboardLayout ?? defaultKeyboardLayout)
     }
   )
 
@@ -51,7 +69,7 @@ export const useConfigStore = defineStore('config', () => {
     let capsAbbrEnable = false
     let seemAbbrEnable = false
 
-    for (let km: Keymap of enabledKeymaps.value) {
+    for (const km: Keymap of enabledKeymaps.value) {
       // 不遍历缩写、设置
       if (km.id >= 2 && km.id <= 4) {
         console.log(km.id)
@@ -63,8 +81,8 @@ export const useConfigStore = defineStore('config', () => {
         break
       }
 
-      for (let key: string in km.hotkeys) {
-        for (let act: Action of km.hotkeys[key]) {
+      for (const key: string in km.hotkeys) {
+        for (const act: Action of km.hotkeys[key]) {
           // 有选择caps命令将命令状态设置为开启
           if (act.actionTypeID == 9 && act.actionValueID == 6) {
             capsAbbrEnable = true
@@ -162,7 +180,8 @@ export const useConfigStore = defineStore('config', () => {
     changeHotkey, removeHotkey, addHotKey, translate,
     disabledKeys: computed(() => _disabledKeys(enabledKeymaps.value)),
     getAction: (hotkey: string) => _getAction(keymap.value, hotkey, windowGroupID.value),
-    saveConfig: useThrottleFn(() => _saveConfig(config.value), 1000),
+    saveConfig: useThrottleFn(() => _persistConfig(config.value, false, appStore), 800, true, false),
+    applyConfig: useThrottleFn(() => _persistConfig(config.value, true, appStore), 800, true, false),
   }
 })
 
@@ -206,14 +225,22 @@ function _getAction(keymap: Keymap | undefined, hotkey: string, windowGroupID: n
   return found
 }
 
-function _saveConfig(config: Config | undefined) {
+async function _persistConfig(config: Config | undefined, apply: boolean, appStore: ReturnType<typeof useAppStore>) {
   if (!config) {
     return
   }
 
-  // 克隆一下, 然后删掉空的 action
+  const serialized = serializeConfigForPersist(config)
+  if (apply) {
+    await appStore.applyConfig(serialized)
+    return
+  }
+  await appStore.saveConfig(serialized)
+}
+
+function serializeConfigForPersist(config: Config) {
   config = JSON.parse(JSON.stringify(config))
-  for (const km of config!.keymaps) {
+  for (const km of config.keymaps) {
     const keySet = new Set(parseKeyboardLayout(config!.options.keyboardLayout, km.hotkey).flatMap(x => x))
     for (const [hk, actions] of Object.entries(km.hotkeys)) {
       const filterd = actions.filter(x => !x.isEmpty)
@@ -225,13 +252,7 @@ function _saveConfig(config: Config | undefined) {
       }
     }
   }
-  useMyFetch("/config", { timeout: 1500, })
-    .put(config)
-    .onFetchError(err => { 
-      console.error(err)
-      alert(`保存失败，可能设置程序被关了, ${err.name}:${err.code}`)
-    }
-  )
+  return config
 }
 
 function _disabledKeys(keymaps: Keymap[]) {
@@ -253,11 +274,26 @@ function _disabledKeys(keymaps: Keymap[]) {
   return m
 }
 
+function pickInitialHotkey(keymap: Keymap | undefined, layout: string) {
+  if (!keymap) {
+    return ""
+  }
+
+  const orderedKeys = parseKeyboardLayout(layout, keymap.hotkey).flat()
+  for (const hotkey of orderedKeys) {
+    const actions = keymap.hotkeys[hotkey]
+    if (actions?.some(action => !action.isEmpty)) {
+      return hotkey
+    }
+  }
+
+  return orderedKeys[0] ?? Object.keys(keymap.hotkeys)[0] ?? ""
+}
+
 function fetchConfig() {
   const config = ref<Config>()
-  const { data, error } = useMyFetch("/config").json<Config>()
-  watch(data, (val) => {
-    val = val!
+
+  void desktopApi.getConfig().then((val) => {
     // 这个字段是后加的, 旧的 config.json 肯定没有此字段, 所以要初始化
     if (!val.options.keyboardLayout) {
       val.options.keyboardLayout = defaultKeyboardLayout
@@ -279,6 +315,9 @@ function fetchConfig() {
       })
     }
     config.value = val
+  }).catch((error) => {
+    console.error(error)
+    alert(`加载配置失败: ${error}`)
   })
   return config
 }

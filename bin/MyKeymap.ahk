@@ -1,6 +1,7 @@
 ﻿#Requires AutoHotkey v2.0
 #SingleInstance Force
 #UseHook true
+global IsDesktopHostMode := true
 
 #include lib/translation.ahk
 #Include lib/Functions.ahk
@@ -378,7 +379,7 @@ InitTrayMenu() {
   A_TrayMenu.Default := Translation().menu_pause
   A_TrayMenu.ClickCount := 1
 
-  A_IconTip := "MyKeymap 2.0-beta33 created by 咸鱼阿康"
+  A_IconTip := "MyKeymap-re 2.0-beta33-re1 created by 咸鱼阿康, modified by Xyvirix"
   TraySetIcon("./bin/icons/logo.ico", , true)
 }
 

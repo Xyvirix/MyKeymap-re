@@ -1,10 +1,6 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
-import { useMyFetch } from './server'
-
-interface Shortcut {
-  path: string
-}
+import { ref } from 'vue'
+import { desktopApi } from './server'
 
 export const useShortcutStore = defineStore('shortcut', () => {
   const shortcuts = fetchShortcuts()
@@ -13,7 +9,11 @@ export const useShortcutStore = defineStore('shortcut', () => {
 
 const fetchShortcuts = () => {
   const shortcuts = ref<string[]>()
-  const { data, error } = useMyFetch('/shortcuts').json<Shortcut[]>()
-  watch(data, (newValue) => shortcuts.value = newValue?.map(x => x.path))
+  void desktopApi.listShortcuts().then((items) => {
+    shortcuts.value = items.map(x => x.path)
+  }).catch((error) => {
+    console.error(error)
+    shortcuts.value = []
+  })
   return shortcuts
 }

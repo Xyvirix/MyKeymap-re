@@ -10,17 +10,29 @@ import (
 )
 
 func GenerateScripts(config *Config) {
-	preprocess(config)
-
-	if err := SaveAHK(config, "./templates/MyKeymap.tmpl", "../bin/MyKeymap.ahk"); err != nil {
+	if err := GenerateScriptsAt("./templates", "../bin", config); err != nil {
 		panic(err)
 	}
-	if err := SaveAHK(config, "./templates/CommandInputSkin.tmpl", "../bin/CommandInputSkin.txt"); err != nil {
-		panic(err)
+}
+
+func GenerateDesktopScriptsAt(templateDir, binDir string, config *Config) error {
+	config.DesktopMode = true
+	return GenerateScriptsAt(templateDir, binDir, config)
+}
+
+func GenerateScriptsAt(templateDir, binDir string, config *Config) error {
+	preprocess(config)
+
+	if err := SaveAHK(config, filepath.Join(templateDir, "MyKeymap.tmpl"), filepath.Join(binDir, "MyKeymap.ahk")); err != nil {
+		return err
+	}
+	if err := SaveAHK(config, filepath.Join(templateDir, "CommandInputSkin.tmpl"), filepath.Join(binDir, "CommandInputSkin.txt")); err != nil {
+		return err
 	}
 	// if err := SaveAHK(config, "./templates/CustomShellMenu.ahk", "../bin/CustomShellMenu.ahk"); err != nil {
 	// 	panic(err)
 	// }
+	return nil
 }
 
 func preprocess(cfg *Config) {

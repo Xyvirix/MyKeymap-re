@@ -69,11 +69,11 @@ function onActionTypeChange(action: Action) {
 </script>
 
 <template>
-  <v-row>
-    <v-col>
-      <v-card min-height="530" width="800" elevation="5">
-        <v-card-title style="padding-bottom: 0">
-          <v-row>
+  <v-row class="action-layout" no-gutters>
+    <v-col class="action-layout-col">
+      <v-card min-height="360" elevation="0" class="action-card">
+        <v-card-title class="action-card-title">
+          <v-row no-gutters class="action-select-row">
             <v-col cols="5">
               <v-select :items="config!.options.windowGroups.filter(x => x.id >= 0)"
                         item-title="name"
@@ -95,7 +95,7 @@ function onActionTypeChange(action: Action) {
             </v-col>
           </v-row>
         </v-card-title>
-        <v-card-text style="padding-bottom: 0;">
+        <v-card-text class="action-card-content">
           <component :is="components[action.actionTypeID]" />
         </v-card-text>
       </v-card>
@@ -104,19 +104,55 @@ function onActionTypeChange(action: Action) {
 </template>
 
 <style scoped>
-.v-card {
-  padding-top: 8px;
-  padding-left: 10px;
-  padding-right: 10px;
+.action-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 8px 12px 12px;
+  border: 1px solid rgba(127, 146, 184, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 249, 252, 0.9));
+  box-shadow: 0 12px 28px rgba(39, 68, 120, 0.08);
 }
 
-/* 默认的 label 颜色那么灰, 看起来很难受, 调整成紫色 */
+.action-layout {
+  margin: 0;
+}
+
+.action-layout-col {
+  padding: 0;
+}
+
+.action-card-title {
+  padding: 4px 4px 0;
+}
+
+.action-select-row {
+  margin: 0;
+}
+
+.action-select-row > :deep(.v-col:first-child) {
+  padding-right: 6px;
+}
+
+.action-select-row > :deep(.v-col:last-child) {
+  padding-left: 6px;
+}
+
+.action-card-content {
+  padding: 0 4px 4px;
+}
+
 :deep(.v-field--active:not(.v-field--focused) label) {
-  color: darkmagenta;
+  color: #3657d6;
   opacity: 1;
 }
 
 :deep(.v-checkbox label) {
   opacity: 0.9;
+}
+
+:deep(.v-field) {
+  border-radius: 16px;
 }
 </style>

@@ -56,11 +56,13 @@ func server(hasError chan<- struct{}, rainDone <-chan struct{}, debug bool) {
 		gin.DefaultWriter = io.Discard
 	}
 
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Logger(), gin.Recovery())
 	router.Use(PanicHandler(hasError, rainDone))
 	if debug {
 		router.Use(cors.Default())
 	}
+	_ = router.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 	router.NoRoute(static.Serve("/", static.LocalFile("./site", false)), indexHandler)
 
 	router.GET("/", indexHandler)

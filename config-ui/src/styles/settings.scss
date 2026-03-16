@@ -1,10 +1,21 @@
-/**
- * src/styles/settings.scss
- *
- * Configures SASS variables and Vuetify overwrites
- */
+:root {
+  color-scheme: light;
+  --desktop-font: "Segoe UI Variable Text", "PingFang SC", "Microsoft YaHei UI", "Noto Sans SC", sans-serif;
+}
 
-// https://vuetifyjs.com/features/sass-variables/`
-// @use 'vuetify/settings' with (
-//   $color-pack: false
-// );
+html,
+body,
+#app {
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  font-family: var(--desktop-font);
+  color: #15233a;
+  background: #f4f7fb;
+}
+
+* {
+  box-sizing: border-box;
+}

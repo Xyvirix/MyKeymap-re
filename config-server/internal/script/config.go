@@ -12,11 +12,14 @@ import (
 // 刚刚发现 GoLand 可以直接把 JSON 字符串粘贴为「 结构体定义 」 一下省掉了好多工作
 
 var MykeymapVersion string
+var MykeymapAuthor string
 
 type Config struct {
-	Keymaps    []Keymap `json:"keymaps,omitempty"`
-	Options    Options  `json:"options,omitempty"`
-	KeyMapping string   `json:"-"`
+	Keymaps     []Keymap `json:"keymaps,omitempty"`
+	Options     Options  `json:"options,omitempty"`
+	KeyMapping  string   `json:"-"`
+	Author      string   `json:"-"`
+	DesktopMode bool    `json:"-"`
 }
 
 type Keymap struct {
@@ -64,6 +67,7 @@ func ParseConfig(file string) (*Config, error) {
 	}
 
 	config.Options.MykeymapVersion = MykeymapVersion
+	config.Author = MykeymapAuthor
 	if config.Options.Mouse.TipSymbol == "" {
 		config.Options.Mouse.TipSymbol = "🐶"
 	}
@@ -94,18 +98,22 @@ func ParseConfig(file string) (*Config, error) {
 }
 
 func SaveConfigFile(config *Config) {
+	if err := SaveConfigFileTo("../data/config.json", config); err != nil {
+		panic(err)
+	}
+}
+
+func SaveConfigFileTo(filename string, config *Config) error {
 	// 先写到缓冲区,  如果直接写文件的话, 当编码过程遇到错误时, 会导致文件损坏
 	buf := new(bytes.Buffer)
 	encoder := json.NewEncoder(buf)
 	encoder.SetIndent("", "  ")
 	encoder.SetEscapeHTML(false)
 	if err := encoder.Encode(config); err != nil {
-		panic(err)
+		return err
 	}
 
-	if err := os.WriteFile("../data/config.json", buf.Bytes(), 0644); err != nil {
-		panic(err)
-	}
+	return os.WriteFile(filename, buf.Bytes(), 0644)
 }
 
 func groupName(id int, prefix ...string) string {

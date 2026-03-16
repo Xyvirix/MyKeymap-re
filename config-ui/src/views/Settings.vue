@@ -10,11 +10,13 @@ import { Keymap } from "@/types/config";
 import WindowGroupDialog from "@/components/dialog/WindowGroupDialog.vue";
 import findLastIndex from "lodash-es/findLastIndex";
 import { server } from "@/store/server";
-import { computed } from "@vue/reactivity";
+import { computed } from "vue";
 import { languageList } from "@/store/language-map";
+import { useAppStore } from "@/store/app";
 
 const { customKeymaps, customParentKeymaps, customSonKeymaps, options, keymaps } = storeToRefs(useConfigStore())
 const { translate } = useConfigStore()
+const appStore = useAppStore()
 
 
 const currId = ref(0)
@@ -145,12 +147,12 @@ function removeKeymapByIndex(index: number) {
   keymaps.value.splice(index, 1)
 }
 
-function onStartupChange() {
+async function onStartupChange() {
   options.value.startup = !options.value.startup
   if (options.value.startup) {
-    server.enableRunAtStartup()
+    appStore.ingestResult(await server.enableRunAtStartup())
   } else {
-    server.disableRunAtStartup()
+    appStore.ingestResult(await server.disableRunAtStartup())
   }
 }
 
@@ -174,32 +176,32 @@ function normalizeKeyName(hotkey: string) : string {
 </script>
 
 <template>
-  <v-container :fluid="true">
-    <v-row>
-      <v-col xl="6">
-        <v-card width="640" elevation="3">
-          <Table class="text-left" :titles="[translate('label:501'), translate('label:502'), translate('label:503'), translate('label:504')]">
+  <v-container :fluid="true" class="settings-shell">
+    <v-row class="settings-layout">
+      <v-col cols="12" lg="7" xl="7" class="settings-primary">
+        <v-card elevation="0" class="settings-card keymap-card">
+          <Table class="text-left keymap-table" :titles="[translate('label:501'), translate('label:502'), translate('label:503'), translate('label:504')]">
             <tr :class="currId == keymap.id ? '' : ''"
                 @click="currId = keymap.id"
                 v-for="keymap in customKeymaps" :key="keymap.id">
               <td>
                 <v-text-field v-model.lazy="keymap.name" @blur="checkKeymapData(keymap)"
-                              variant="plain" style="width: 9rem"></v-text-field>
+                              variant="plain" class="keymap-name-field"></v-text-field>
               </td>
               <td>
                 <v-text-field v-model.lazy="keymap.hotkey" @blur="checkKeymapData(keymap)"
-                              variant="plain" style="width: 7rem"></v-text-field>
+                              variant="plain" class="keymap-hotkey-field"></v-text-field>
               </td>
               <td>
                 <v-select v-model="keymap.parentID" :items="customParentKeymaps.filter(c => c.id != keymap.id)"
                           :item-title="item => item.name"
                           :item-value="item => item.id" :disabled="hasSubKeymap(keymap)"
                           item-color="blue"
-                          variant="plain" style="width: 7rem">
+                          variant="plain" class="keymap-parent-field">
                 </v-select>
               </td>
               <td>
-                <div class="d-flex justify-space-between align-center">
+                <div class="table-actions">
                   <v-switch hide-details color="primary" :model-value="keymap.enable"
                             @click="toggleKeymapEnable(keymap)"></v-switch>
                   <tip :text="deleteBtnTip(keymap)">
@@ -217,31 +219,30 @@ function normalizeKeyName(hotkey: string) : string {
           </div>
         </v-card>
       </v-col>
-      <v-col class="ml-5 mr-3">
+      <v-col cols="12" lg="5" xl="5" class="settings-secondary">
         <div class="otherSetting">
           <v-row :dense="true">
             <v-col>
-              <v-card :title="translate('label:505')" min-width="180">
+              <v-card :title="translate('label:505')" class="settings-card section-card">
                 <v-card-text>
                   <v-switch :label="translate('label:506')" color="primary"
                             :model-value="options.startup"
                             @change="onStartupChange"></v-switch>
-                  <!-- <path-dialog/> -->
-                  <v-btn class="mt-3 mr-2 text-none" width="170" color="blue" variant="outlined" @click="showLanguageOption = resetOtherToFalse(!showLanguageOption)">{{ translate('label:781') }}</v-btn>
-                  <!-- <span class="mr-2"></span> -->
-                  <window-group-dialog/>
-                  <br/>
-                  <v-btn class="mt-3 mr-2 text-none" width="170" color="blue" variant="outlined" @click="showMouseOption = resetOtherToFalse(!showMouseOption)">{{ translate('label:701') }}</v-btn>
-                  <v-btn class="mt-3 mr-2 text-none" width="170" color="blue" variant="outlined" @click="showKeyboardLayout = resetOtherToFalse(!showKeyboardLayout)">{{ translate('label:721') }}</v-btn>
-                  <v-btn class="mt-3 mr-2 text-none" width="170" color="blue" variant="outlined" @click="showSkin = resetOtherToFalse(!showSkin)">{{ translate('label:741') }}</v-btn>
-                  <v-btn class="mt-3 mr-2 text-none" width="170" color="blue" variant="outlined" @click="showKeymapDelay = resetOtherToFalse(!showKeymapDelay)">{{ translate('label:761') }}</v-btn>
+                  <div class="option-shortcuts">
+                    <v-btn class="option-trigger text-none" color="blue" variant="outlined" @click="showLanguageOption = resetOtherToFalse(!showLanguageOption)">{{ translate('label:781') }}</v-btn>
+                    <window-group-dialog class="option-trigger-host"/>
+                    <v-btn class="option-trigger text-none" color="blue" variant="outlined" @click="showMouseOption = resetOtherToFalse(!showMouseOption)">{{ translate('label:701') }}</v-btn>
+                    <v-btn class="option-trigger text-none" color="blue" variant="outlined" @click="showKeyboardLayout = resetOtherToFalse(!showKeyboardLayout)">{{ translate('label:721') }}</v-btn>
+                    <v-btn class="option-trigger text-none" color="blue" variant="outlined" @click="showSkin = resetOtherToFalse(!showSkin)">{{ translate('label:741') }}</v-btn>
+                    <v-btn class="option-trigger text-none" color="blue" variant="outlined" @click="showKeymapDelay = resetOtherToFalse(!showKeymapDelay)">{{ translate('label:761') }}</v-btn>
+                  </div>
                 </v-card-text>
               </v-card>
             </v-col>
           </v-row>
             <v-row :dense="true" v-show="showMouseOption">
               <v-col>
-                <v-card :title="translate('label:702')" min-width="350">
+                <v-card :title="translate('label:702')" class="settings-card section-card">
                   <v-card-text>
                     <v-row class="mouseRow" no-gutters>
                       <v-col>
@@ -298,7 +299,7 @@ function normalizeKeyName(hotkey: string) : string {
                 </v-card>
               </v-col>
               <v-col>
-                <v-card :title="translate('label:712')" min-width="180">
+                <v-card :title="translate('label:712')" class="settings-card section-card compact-card">
                   <v-card-text>
                     <v-text-field v-model="options.scroll.delay1" variant="underlined"
                                   type="number" step=".01" maxlength="5" color="primary"
@@ -315,7 +316,7 @@ function normalizeKeyName(hotkey: string) : string {
             </v-row>
             <v-row v-show="showKeyboardLayout">
               <v-col>
-                <v-card :title="translate('label:722')" elevation="2">
+                <v-card :title="translate('label:722')" elevation="0" class="settings-card section-card">
                   <v-card-text>
                     <v-textarea color="primary" variant="underlined" auto-grow rows="4" v-model="options.keyboardLayout"></v-textarea>
                   </v-card-text>
@@ -330,7 +331,7 @@ function normalizeKeyName(hotkey: string) : string {
             </v-row>
             <v-row v-show="showLanguageOption">
               <v-col>
-                <v-card elevation="2">
+                <v-card elevation="0" class="settings-card section-card compact-card">
                   <v-card-text>
                     <v-select :items="languageList" v-model="options.language" variant="outlined"></v-select>
                   </v-card-text>
@@ -339,7 +340,7 @@ function normalizeKeyName(hotkey: string) : string {
             </v-row>
             <v-row v-show="showKeymapDelay">
               <v-col>
-                <v-card :title="translate('label:762')" elevation="2">
+                <v-card :title="translate('label:762')" elevation="0" class="settings-card section-card">
                   <v-card-text>
                     {{ translate('label:763') }}<br>
                     {{ translate('label:764') }}<br>
@@ -358,7 +359,7 @@ function normalizeKeyName(hotkey: string) : string {
             </v-row>
             <v-row v-show="showSkin">
               <v-col>
-                <v-card :title="translate('label:742')" elevation="2">
+                <v-card :title="translate('label:742')" elevation="0" class="settings-card section-card">
                   <v-card-text>
                     <v-row v-for="(row, index) in skin" :key="index">
                       <v-col cols="3" v-for="item in row" :key="item.key">
@@ -376,6 +377,115 @@ function normalizeKeyName(hotkey: string) : string {
 </template>
 
 <style scoped>
+.settings-shell {
+  width: 100%;
+  max-width: none;
+  padding: 0 2px 8px 4px;
+}
+
+.settings-layout {
+  margin: 0 !important;
+  align-items: start;
+}
+
+.settings-primary,
+.settings-secondary {
+  min-width: 0;
+  padding: 5px !important;
+}
+
+.settings-card {
+  border: 1px solid rgba(127, 146, 184, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 22px rgba(39, 68, 120, 0.06);
+}
+
+.keymap-card {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.keymap-card :deep(.Table) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.keymap-card :deep(table) {
+  table-layout: fixed;
+}
+
+.keymap-card :deep(th),
+.keymap-card :deep(td) {
+  padding-inline: 10px;
+}
+
+.keymap-card :deep(th:nth-child(1)),
+.keymap-card :deep(td:nth-child(1)) {
+  width: 34%;
+}
+
+.keymap-card :deep(th:nth-child(2)),
+.keymap-card :deep(td:nth-child(2)) {
+  width: 18%;
+}
+
+.keymap-card :deep(th:nth-child(3)),
+.keymap-card :deep(td:nth-child(3)) {
+  width: 24%;
+}
+
+.keymap-card :deep(th:nth-child(4)),
+.keymap-card :deep(td:nth-child(4)) {
+  width: 24%;
+}
+
+.keymap-name-field,
+.keymap-hotkey-field,
+.keymap-parent-field {
+  width: 100%;
+  min-width: 0;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.section-card :deep(.v-card-text) {
+  padding: 6px 10px 8px;
+}
+
+.compact-card :deep(.v-card-text) {
+  padding: 5px 10px 6px;
+}
+
+.option-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+  align-items: start;
+}
+
+.option-trigger {
+  justify-content: flex-start;
+  min-height: 36px;
+  padding-inline: 10px;
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.option-trigger-host {
+  display: contents;
+}
+
 table .v-text-field :deep(input) {
   min-height: auto;
   padding: 0 !important;
@@ -408,14 +518,72 @@ table .v-autocomplete :deep(input) {
 }
 
 .otherSetting .v-card {
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .mouseRow .v-col:first-child {
-  padding-right: 16px;
+  padding-right: 10px;
 }
 
 .positive-number {
   color: #d05;
+}
+
+:deep(.v-field) {
+  border-radius: 16px;
+}
+
+:deep(.v-card-title) {
+  font-weight: 700;
+  padding: 12px 14px 2px;
+}
+
+.settings-shell :deep(.v-row) {
+  margin: 0;
+}
+
+.settings-shell :deep(.v-col) {
+  min-width: 0;
+  padding: 5px;
+}
+
+.settings-shell :deep(.v-btn) {
+  letter-spacing: 0.01em;
+}
+
+.settings-shell :deep(.v-field__input) {
+  min-height: 38px;
+}
+
+.settings-shell :deep(.v-switch .v-selection-control) {
+  min-height: 34px;
+}
+
+.settings-shell :deep(.v-selection-control) {
+  align-items: center;
+}
+
+@media (max-width: 1380px) {
+  .option-shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1440px) {
+  .settings-primary,
+  .settings-secondary {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 960px) {
+  .settings-shell {
+    padding-inline: 2px;
+  }
+
+  .option-shortcuts {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

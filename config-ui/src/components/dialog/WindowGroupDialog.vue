@@ -6,7 +6,7 @@ import { useConfigStore } from "@/store/config";
 import { storeToRefs } from "pinia";
 import { server } from "@/store/server";
 import { WindowGroup } from "@/types/config";
-import { computed } from "@vue/reactivity";
+import { computed } from "vue";
 
 const { options } = storeToRefs(useConfigStore())
 const { translate } = useConfigStore()
@@ -33,7 +33,7 @@ const save = (dataObj: WindowGroup[]) => {
   <input-key-value-dialog title="" :data-obj="options.windowGroups"
                           @add="addItem" @save="save">
     <template #default="{ props }">
-      <v-btn class="mt-3 text-none" width="170" color="blue" v-bind="props" variant="outlined">{{ translate('label:601') }}</v-btn>
+      <v-btn class="text-none option-trigger" color="blue" v-bind="props" variant="outlined">{{ translate('label:601') }}</v-btn>
     </template>
 
     <template #tips>{{ translate('label:612') }}</template>
@@ -66,4 +66,11 @@ const save = (dataObj: WindowGroup[]) => {
   </input-key-value-dialog>
 </template>
 
-<style scoped></style>
+<style scoped>
+.option-trigger {
+  justify-content: flex-start;
+  min-height: 42px;
+  width: 100%;
+  padding-inline: 14px;
+}
+</style>
