@@ -41,5 +41,10 @@ MyKeymap-re 是基于 [MyKeymap](https://github.com/xianyukang/MyKeymap) 的桌�
 
 ## Screenshots
 
-| ![features](./doc/features.png) | ![settings](./doc/settings.png) |
-| ------------------------------- | -------------------------------- |
+| Desktop Overview | Keymap Editor |
+| ---------------- | ------------- |
+| ![desktop overview](./doc/desktop-home.png) | ![desktop keymap](./doc/desktop-keymap.png) |
+
+| Settings Workspace |
+| ------------------ |
+| ![desktop settings](./doc/desktop-settings.png) |
